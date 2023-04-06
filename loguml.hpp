@@ -1,22 +1,49 @@
 #include <unordered_map>
+#include <set>
 #include <string>
 #include <iostream>
 
-// Print Graphviz code for a DAG represented as an unordered_map
-void printGraphvizCode(const std::unordered_map<std::string, std::unordered_map<std::string, std::string>>& dag) {
-    std::cout << "digraph {\n";
+// The conceptual type: Node
+// e.g. 
+// class Node {
+//  public: 
+//    auto GetID() -> std::string;
+//    auto GetChildren() -> std::vector<std::string>
+// };
+// We assume the DAG is made up of Node objects, which internally hold all their relations
 
-    // Iterate over all nodes in the DAG
-    for (const auto& node : dag) {
-        // Print the node ID
-        std::cout << "    " << node.first << " [label=\"" << node.first << "\"];\n";
+template<typename Node, typename InfoSet>
+void generateGraphvizForDAG(
+    const std::unordered_map<std::string, Node>& dag, 
+    const std::string &node, // Starting node ID
+    const std::function<std::vector<std::string>>(Node)> &visitor, // Extract the info to print from each Node
+    std::ostream& out
+    )
+{
+    out << "digraph {\n";
 
-        // Iterate over all edges from the node
-        for (const auto& edge : node.second) {
-            // Print the edge
-            std::cout << "    " << node.first << " -> " << edge.first << " [label=\"" << edge.second << "\"];\n";
-        }
+    // Set of visited ID's
+    std::set<std::string> visited = { };
+
+    // Set of next to visit ID's
+    std::set<std::string> toVisit = { start };
+
+    while (!toVisit.empty()) {
+      // Starting node
+      const Node start = dag[node];
+
+      for (const auto & info : visitor(start)) {
+        out << start.GetID() << "[label=\"" info << "\"];\n";
+      }
+
+      for (const auto & child : start.GetChildren() {
+        out << start.GetID() << " -> " << child.GetID() << std::endl;
+        toVisit.insert(child.GetID());
+      }
+
+      visited.insert(start.GetID());
+      toVisit.remove(start.GetID());
     }
 
-    std::cout << "}\n";
+    out << "}\n";
 }
